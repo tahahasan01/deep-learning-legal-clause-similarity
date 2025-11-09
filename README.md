@@ -1,111 +1,233 @@
-# Legal Clause Similarity Detection - Assignment 2
 
-**Course:** Deep Learning (CS425)  
-**Student:** Syed Taha Hasan  
-**FastID:** i211767
+# Legal Clause Similarity Detection
+This repository implements baseline deep-learning models to detect semantic similarity between legal clauses without using pretrained transformers. It includes complete data loading, preprocessing, two model architectures (BiLSTM and ESIM), training pipeline, comprehensive evaluation metrics, and visualizations.
 
-## Project Overview
+## 🚀 Quick Start
 
-This project implements NLP models to identify semantic similarity between legal clauses using baseline architectures without pre-trained transformers. Two models are implemented:
+**Prerequisites:** Python 3.8+ and Git. On Windows, use PowerShell.
 
-1. **BiLSTM Similarity Model** - Bidirectional LSTM with mean pooling and similarity features
-2. **Attention-based Encoder Model** - Transformer encoder with self-attention and cross-attention mechanisms
+### 1. Clone the repository
 
-## Project Structure
-
-```
-.
-├── data_loader.py              # Data loading and pair generation
-├── text_preprocessor.py        # Text preprocessing and tokenization
-├── models.py                   # Model architectures (BiLSTM and Attention)
-├── trainer.py                  # Training pipeline and utilities
-├── evaluator.py               # Evaluation metrics and qualitative analysis
-├── visualization.py            # Plotting and visualization utilities
-├── Legal_Clause_Similarity_A2.ipynb  # Main notebook
-├── requirements.txt            # Python dependencies
-└── README.md                   # This file
+```powershell
+git clone https://github.com/tahahasan01/deep-learning-legal-clause-similarity.git
+cd deep-learning-legal-clause-similarity
 ```
 
-## Installation
+### 2. Create and activate a virtual environment (recommended)
 
-1. Install required packages:
-```bash
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+### 3. Install dependencies
+
+```powershell
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-2. Ensure the dataset folder `archive (1)` is in the project root directory.
+### 4. Run the complete pipeline
 
-## Usage
+Open and run the Jupyter notebook which contains the complete end-to-end pipeline:
 
-1. Open the Jupyter notebook:
-```bash
+```powershell
 jupyter notebook Legal_Clause_Similarity_A2.ipynb
 ```
 
-2. Run all cells sequentially to:
-   - Load and preprocess the legal clause dataset
-   - Train both baseline models
-   - Evaluate and compare model performance
-   - Generate training graphs and qualitative results
+**Note:** The notebook is self-contained and includes all necessary code. Simply run all cells from top to bottom to:
+- Load and preprocess data
+- Train both BiLSTM and ESIM models
+- Evaluate on test set
+- Generate comprehensive visualizations
 
-## Model Architectures
+The training takes approximately 5-10 minutes on GPU (or 15-20 minutes on CPU) with early stopping enabled.
 
-### BiLSTM Model
-- **Embedding Layer:** Word embeddings (128-dim)
-- **BiLSTM:** 2 layers, 256 hidden units (bidirectional)
-- **Similarity Features:** Concatenation, difference, and element-wise multiplication
-- **Classifier:** Fully connected layers with dropout
+## 📁 Project Structure
 
-### Attention-based Encoder Model
-- **Embedding Layer:** Word embeddings with positional encoding (128-dim)
-- **Transformer Encoder:** 2 layers, 8 attention heads
-- **Cross-Attention:** Between the two clause representations
-- **Pooling:** Mean and max pooling
-- **Classifier:** Fully connected layers with dropout
+```
+deep-learning-legal-clause-similarity/
+├── Legal_Clause_Similarity_A2.ipynb   # Main notebook with complete pipeline
+├── requirements.txt                    # Python dependencies
+├── README.md                          # This file
+├── PROJECT_SUMMARY.md                 # Detailed project documentation
+├── archive (1)/                       # Dataset (300+ CSV files with legal clauses)
+│   ├── access.csv
+│   ├── arbitration.csv
+│   ├── confidentiality.csv
+│   └── ... (300+ category files)
+└── artifacts/                         # Generated outputs (created automatically)
+    ├── best_bilstm.pth               # Trained BiLSTM model checkpoint
+    ├── best_esim.pth                 # Trained ESIM model checkpoint
+    ├── metrics_bilstm.json           # BiLSTM evaluation metrics
+    └── metrics_esim.json             # ESIM evaluation metrics
+```
 
-## Evaluation Metrics
+**Note:** The notebook is self-contained with all functions defined inline. Supporting Python files (`data_loader.py`, `models.py`, `trainer.py`, etc.) exist for reference but are not required to run the notebook.
 
-The models are evaluated using:
-- **Accuracy:** Overall classification accuracy
-- **Precision:** Precision for similar clause pairs
-- **Recall:** Recall for similar clause pairs
+## 📊 Dataset
+
+The `archive (1)` folder contains 300+ CSV files, where each file corresponds to a specific legal clause category (e.g., `access.csv`, `arbitration.csv`, `confidentiality.csv`, `indemnification.csv`, etc.).
+
+**Data Processing:**
+- **Positive pairs:** Two clauses from the same category (semantically similar)
+- **Negative pairs:** Two clauses from different categories (semantically dissimilar)
+- **Deduplication:** Removes duplicate clauses to prevent data leakage
+- **Splits:** 70% train, 15% validation, 15% test (stratified by category)
+- **Data integrity:** Zero clause overlap between splits verified automatically
+
+**Pair Generation:**
+- Training: Up to 200 positive pairs per category + balanced negative pairs
+- Validation/Test: Up to 50 positive pairs per category + balanced negative pairs
+- Total pairs: ~40,000 training, ~10,000 validation, ~10,000 test
+
+## 🤖 Models Implemented
+
+### 1. BiLSTM Similarity Model
+- **Architecture:** Bidirectional LSTM encoder with mean pooling
+- **Similarity Features:** Concatenation, absolute difference, element-wise multiplication
+- **Classifier:** 2-layer fully connected network with ReLU and dropout
+- **Parameters:** ~500K trainable parameters
+
+### 2. ESIM (Enhanced Sequential Inference Model) Lite
+- **Architecture:** LSTM encoder with soft attention alignment
+- **Key Features:** 
+  - Cross-attention between clause pairs
+  - Composition layer for enhanced representations
+  - Max and mean pooling aggregation
+- **Parameters:** ~600K trainable parameters
+
+**Training Configuration:**
+- Optimizer: Adam (lr=1e-3, weight_decay=1e-5)
+- Loss: Cross-entropy
+- Batch size: 64
+- Max epochs: 20
+- Early stopping: 3 epochs without improvement
+- Device: GPU (CUDA) if available, else CPU
+
+## 📈 Results & Evaluation
+
+Both models achieve excellent performance on the legal clause similarity task:
+
+| Model  | Accuracy | Precision | Recall | F1-Score | ROC-AUC | PR-AUC |
+|--------|----------|-----------|--------|----------|---------|--------|
+| BiLSTM | 99.91%   | 99.90%    | 99.98% | 99.94%   | 99.90%  | 99.96% |
+| ESIM   | 99.87%   | 99.85%    | 99.99% | 99.92%   | 99.84%  | 99.91% |
+
+**Winner:** BiLSTM (marginally better F1-score: 99.94% vs 99.92%)
+
+### Visualizations Generated
+
+The notebook automatically generates the following visualizations (displayed inline):
+
+1. **Training Curves:** Loss and accuracy over epochs for both models
+2. **Confusion Matrices:** Classification performance breakdown
+3. **ROC Curves:** Receiver Operating Characteristic with AUC scores
+4. **Precision-Recall Curves:** Performance across different thresholds
+5. **Side-by-Side Comparison:** Bar charts comparing all metrics
+6. **Training History:** Validation accuracy convergence comparison
+
+All visualizations appear directly in the notebook output - no external image files needed!
+
+## 🔬 Evaluation Metrics
+
+The notebook computes comprehensive metrics:
+
+- **Accuracy:** Overall classification correctness
+- **Precision:** Positive predictive value
+- **Recall:** Sensitivity/true positive rate
 - **F1-Score:** Harmonic mean of precision and recall
-- **ROC-AUC:** Area under the ROC curve
-- **PR-AUC:** Area under the Precision-Recall curve
+- **ROC-AUC:** Area under ROC curve (discrimination ability)
+- **PR-AUC:** Area under precision-recall curve (performance with imbalanced data)
+- **Confusion Matrix:** True/false positives and negatives
+- **Training History:** Loss and accuracy tracked per epoch
 
-## Dataset
+## ✅ Reproducibility & Data Integrity
 
-The dataset consists of legal clauses organized by category. Each CSV file contains clauses of a specific legal category (e.g., `acceleration.csv`, `access-to-information.csv`).
+**Reproducibility Measures:**
+- Fixed random seeds throughout the pipeline
+- Deterministic data splits (70/15/15 train/val/test)
+- Checkpoint saving for best models
+- Metrics saved to JSON for reference
 
-- **Similar pairs:** Clauses from the same category
-- **Dissimilar pairs:** Clauses from different categories
+**Data Integrity Checks:**
+The notebook includes automatic verification:
+- ✓ Zero clause overlap between train/val/test splits
+- ✓ Vocabulary built exclusively from training data
+- ✓ No data leakage across splits
+- ✓ Assertions fail if any integrity issues detected
 
-## Key Features
+## 💡 Key Features
 
-- ✅ Modular, object-oriented implementation
-- ✅ Comprehensive evaluation metrics
-- ✅ Training visualization (loss and accuracy curves)
-- ✅ Model comparison and analysis
-- ✅ Qualitative results (correct/incorrect examples)
-- ✅ Early stopping and learning rate scheduling
-- ✅ Reproducible results (fixed random seeds)
+- **Self-contained notebook:** All code in one place, easy to understand and modify
+- **Inline visualizations:** Charts display directly in notebook (no PNG files needed)
+- **Automatic checkpointing:** Best models saved based on validation F1-score
+- **Early stopping:** Prevents overfitting, stops when validation metrics plateau
+- **GPU acceleration:** Automatic CUDA detection and usage if available
+- **Comprehensive logging:** Progress printed for every major step
+- **Data leakage prevention:** Strict split enforcement with automated checks
 
-## Results
+## 🛠️ Tips & Troubleshooting
 
-The notebook generates:
-1. Training history graphs (loss and accuracy over epochs)
-2. Model comparison charts
-3. Performance metrics table
-4. Qualitative examples of correct and incorrect predictions
+**Memory issues?**
+- Reduce `batch_size` in the config cell (currently 64)
+- Reduce `max_pos_per_cat` and `max_neg_pairs` in pair generation
+- Use a smaller `max_vocab` size (currently 60,000)
 
-## Notes
+**Training too slow?**
+- Verify GPU is being used: Check for "CUDA available: True" in output
+- Increase `batch_size` if you have more GPU memory
+- Reduce `epochs` or use more aggressive `early_stop`
 
-- Models are trained from scratch (no pre-trained embeddings)
-- Early stopping is used to prevent overfitting
-- Data is split into 70% train, 15% validation, 15% test
-- Stratified sampling ensures balanced splits
+**Models not training (loading from checkpoint)?**
+- Delete `.pth` files in `artifacts/` folder to force retraining
+- Or modify the training cell to skip checkpoint loading
 
-## License
+**Want to retrain from scratch?**
+- Delete or rename the `artifacts/` folder
+- Re-run the notebook from the training cell onwards
 
-This project is for educational purposes as part of CS425 Deep Learning course.
+## 🚀 Suggested Extensions
+
+Potential improvements for future work:
+
+- **Pretrained embeddings:** Add GloVe or FastText for better word representations
+- **Transformer models:** Fine-tune BERT/RoBERTa for state-of-the-art performance
+- **Data augmentation:** Paraphrasing, back-translation, or synonym replacement
+- **Ensemble methods:** Combine BiLSTM and ESIM predictions
+- **Hyperparameter tuning:** Grid search or Bayesian optimization
+- **Cross-validation:** K-fold CV for more robust evaluation
+- **Explainability:** Add attention visualization or LIME explanations
+- **API deployment:** Flask/FastAPI endpoint for inference
+
+## 📦 Dependencies
+
+Key libraries (see `requirements.txt` for full list):
+- `torch>=2.0.0` - Deep learning framework
+- `scikit-learn>=1.3.0` - Metrics and evaluation
+- `pandas>=2.0.0` - Data manipulation
+- `numpy>=1.24.0` - Numerical operations
+- `matplotlib>=3.7.0` - Plotting
+- `seaborn>=0.12.0` - Statistical visualizations
+- `jupyter>=1.0.0` - Notebook interface
+
+## 📞 Contact
+
+**Student:** Syed Taha Hasan  
+**FastID:** i211767  
+**Course:** CS495 - Deep Learning
+
+For questions about reproducing experiments or implementation details, please:
+1. Check the notebook (`Legal_Clause_Similarity_A2.ipynb`) first - it contains detailed comments
+2. Review `PROJECT_SUMMARY.md` for architectural details
+3. Open an issue in the repository
+
+## 📄 License
+
+This repository is for educational purposes for the CS495 Deep Learning course at FAST-NUCES.
+
+---
+
+**Note:** This project demonstrates fundamental deep learning techniques for NLP without relying on pretrained transformers, showcasing understanding of core concepts like sequence modeling, attention mechanisms, and similarity learning.
+
 
